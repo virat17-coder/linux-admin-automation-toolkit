@@ -1,93 +1,51 @@
-# Linux System Administration & Automation Toolkit
+# Lab 7 Capstone: Linux System Administration & Automation Toolkit
 
-A menu-driven Bash toolkit for Linux system monitoring, compressed directory backup and restore, and log analysis. It brings the Lab 7 capstone functions together in one terminal dashboard.
-
-## Features
-
-- **System monitoring:** reports CPU load averages, logical CPU count, memory, disk usage, hostname, kernel, and collection time.
-- **Backup and restore:** creates timestamped `.tar.gz` archives and restores an archive into a new timestamped directory.
-- **Log analysis:** counts and displays lines containing common error markers across one or more log files; empty logs are handled safely.
-- **Menu dashboard:** runs each module separately or displays a combined status report.
-- **Input validation:** handles missing source paths, missing logs, invalid menu choices, and unreadable inputs with clear messages.
-
-## Project structure
-
-```text
-Lab7_Capstone/
-├── README.md
-├── monitor.sh
-├── backup.sh
-├── log_analyzer.sh
-├── dashboard.sh
-├── sample_logs/
-│   └── system.log
-├── VIVA_PREP.md
-└── Lab7_Capstone_Report_and_Viva.pdf
-```
+A menu-driven Bash toolkit that combines system monitoring, directory backup, and log analysis. It follows the Lab 7 brief shown in the supplied manual screenshots. Adapt module internals to match your own Lab 5 and Lab 6 scripts/output before final submission if your instructor expects exact reuse.
 
 ## Requirements
 
-- Ubuntu or another Linux distribution (run on Ubuntu via WSL)
-- Bash, `tar`, `grep`, `df`, `free`, and standard Linux utilities
-- No external package installation required
+- Linux (Ubuntu recommended), Bash, `tar`, `grep`, `df`, `free`, and standard core utilities.
+- No external package installation is required.
 
-## Run the toolkit
+## Files
+
+- `monitor.sh`: CPU load, logical CPU count, memory, disk, host, kernel, and collection time.
+- `backup.sh`: creates a timestamped `.tar.gz` from an existing source directory, or restores an archive into a new subdirectory under an existing destination.
+- `log_analyzer.sh`: counts and prints lines containing error/failure/critical/fatal markers across one or more files. Empty/no-match logs are handled safely.
+- `dashboard.sh`: menu to run monitoring, backup, log analysis, or a combined status report.
+- `sample_logs/system.log`: safe sample input for analysis.
+
+## Run
 
 ```bash
 chmod +x ./*.sh
 ./dashboard.sh
 ```
 
-Choose an option from the menu:
+Menu option 3 accepts one log path; press Enter to analyze `sample_logs/*.log`. Option 4 prints monitoring and analyzes the sample logs. To use another log folder for the dashboard, set `LOGDIR=/path/to/logs` before starting it.
 
-1. System Monitoring Report
-2. Run Backup or Restore
-3. Analyze Logs
-4. Full Status Report
-5. Exit
-
-The dashboard analyzes `sample_logs/*.log` by default. Set `LOGDIR` to use another folder:
-
-```bash
-LOGDIR=/path/to/logs ./dashboard.sh
-```
-
-## Run modules directly
+Run modules directly:
 
 ```bash
 ./monitor.sh
 ./backup.sh /path/to/source /path/to/existing-destination
 ./backup.sh restore /path/to/archive.tar.gz /path/to/existing-destination
 ./log_analyzer.sh sample_logs/system.log
-./log_analyzer.sh /path/to/first.log /path/to/second.log
+./log_analyzer.sh /var/log/syslog /var/log/auth.log
 ```
 
-Backup and restore destinations must already exist and be writable. A backup destination cannot be inside its source directory. Restore extracts files into a new `restored_*` subdirectory.
+The backup and restore destinations must already exist and be writable. The script rejects a backup destination inside the source to prevent the archive from being included in itself. Restore extracts into a new timestamped `restored_*` subdirectory. For protected system logs, use only files your account is permitted to read; do not run the whole dashboard as root by default.
 
-## Validation results
+## Validation checklist
 
-Run evidence is included in the report PDF. These cases were observed in Ubuntu on WSL:
+1. Monitoring prints CPU, MEMORY, DISK, and SYSTEM sections.
+2. A valid backup creates a non-empty timestamped `.tar.gz` in the destination; a valid restore extracts into a new subdirectory.
+3. An empty log prints `No errors found.` and exits without a crash.
+4. A nonexistent backup source prints an error and does not create the source directory.
+5. A nonexistent log prints an error; invalid menu input is handled and the menu continues.
 
-| Case | Result |
-|---|---|
-| Full status report | Monitoring sections displayed and the sample error line was detected. |
-| Valid backup | Timestamped `.tar.gz` archive created successfully. |
-| Restore | Archive extracted successfully into a new `restored_*` directory. |
-| Empty log | Printed `No errors found.` without crashing. |
-| Missing backup source | Printed an error and did not create the source directory. |
-| Invalid dashboard choice | Not run. |
+Capture your own terminal screenshots after running these checks and add them to the report before submitting. The included report is a draft and does not claim those commands were executed in your Linux environment.
 
 ## Design notes
 
-The dashboard is the front end and each module is independently executable. `monitor.sh` reads Linux load information from `/proc/loadavg` and uses `nproc`, `free`, and `df`. `backup.sh` uses `tar` for compressed archives. `log_analyzer.sh` uses `grep` to count and display matching lines. Inputs are quoted so paths containing spaces remain a single argument.
-
-CPU load average represents runnable and uninterruptible task load over 1, 5, and 15 minutes; it is not a direct CPU-utilization percentage. Log analysis uses common error keywords and may need adjustment for application-specific log formats.
-
-## Viva preparation and report
-
-- Viva quick prep: `VIVA_PREP.md`
-- Capstone report with terminal evidence: `Lab7_Capstone_Report_and_Viva.pdf`
-
-## Course context
-
-This project implements the Lab 7 Linux System Administration & Automation capstone. If the instructor requires exact reuse of Lab 5 or Lab 6 scripts or output formats, compare those earlier lab files with these modules and adapt them before submission.
+The dashboard is the presentation/controller layer; each module is independently executable. This keeps monitoring, backup, and log parsing testable and reusable. Inputs are quoted to preserve paths containing spaces. Backup validates source/destination before invoking `tar`; log analysis tolerates no-match results from `grep`.
